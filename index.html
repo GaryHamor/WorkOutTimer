@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Rep Timer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --panel-bg: #12121a;
+    --border: #1e1e2e;
+    --accent: #f0c040;
+    --accent2: #e05a30;
+    --text: #e8e8f0;
+    --muted: #555570;
+    --green: #40c878;
+    --red: #e03050;
+    --timer-font: 'Bebas Neue', sans-serif;
+    --ui-font: 'Barlow Condensed', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ui-font);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── SETUP SCREEN ── */
+  #setup-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    padding: 0 20px 24px;
+    overflow-y: auto;
+  }
+
+  .setup-header {
+    padding: 40px 0 28px;
+    text-align: center;
+  }
+
+  .setup-header h1 {
+    font-family: var(--timer-font);
+    font-size: 52px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .setup-header p {
+    font-size: 15px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .setup-section {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .setup-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .number-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .num-btn {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--timer-font);
+    font-size: 28px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.1s, transform 0.1s;
+  }
+
+  .num-btn:active { background: var(--accent); color: var(--bg); transform: scale(0.94); }
+
+  .num-display {
+    flex: 1;
+    text-align: center;
+    font-family: var(--timer-font);
+    font-size: 48px;
+    color: var(--accent);
+    line-height: 1;
+    background: none;
+    border: none;
+    outline: none;
+    width: 0;
+    min-width: 0;
+    caret-color: var(--accent);
+    -webkit-appearance: none;
+    border-radius: 10px;
+    padding: 4px 8px;
+    transition: background 0.15s;
+  }
+  .num-display:focus {
+    background: rgba(240,192,64,0.1);
+  }
+
+  /* User name inputs */
+  .user-inputs { display: flex; flex-direction: column; gap: 10px; }
+
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .user-name-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: var(--ui-font);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .user-name-input:focus { border-color: var(--accent); }
+
+  /* Reps row */
+  .reps-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .reps-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--accent);
+    font-family: var(--timer-font);
+    font-size: 32px;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  .reps-input:focus { border-color: var(--accent); }
+
+  .start-btn {
+    width: 100%;
+    padding: 20px;
+    border-radius: 16px;
+    border: none;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--timer-font);
+    font-size: 32px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+
+  .start-btn:active { transform: scale(0.97); opacity: 0.9; }
+
+  /* ── MAIN APP ── */
+  #app-screen {
+    display: none;
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  /* Panel 1 — Queue */
+  #panel-reps {
+    flex: 0 0 auto;
+    background: var(--panel-bg);
+    border-bottom: 2px solid var(--border);
+    padding: 12px 16px;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  #queue-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  #queue-row::-webkit-scrollbar { display: none; }
+
+  .queue-card {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    min-width: 80px;
+    transition: all 0.3s;
+  }
+
+  .queue-card.current {
+    background: #2a1a08;
+    border-color: var(--accent);
+  }
+
+  .queue-card.upcoming {
+    background: var(--bg);
+    border-color: var(--border);
+  }
+
+  .queue-card-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .queue-card.current .queue-card-label {
+    color: var(--accent);
+  }
+
+  .queue-card-name {
+    font-family: var(--timer-font);
+    font-size: 20px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .queue-card.current .queue-card-name {
+    color: var(--accent);
+  }
+
+  .queue-card.upcoming .queue-card-name {
+    color: var(--muted);
+  }
+
+  .queue-card-rep {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .queue-card.current .queue-card-rep {
+    color: var(--accent);
+  }
+
+  .queue-card.upcoming .queue-card-rep {
+    color: var(--muted);
+  }
+
+  /* Progress dots */
+  .progress-dots {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .dot.done { background: var(--green); }
+  .dot.active { background: var(--accent); }
+
+  /* Panel 2 — Timer */
+  #panel-timer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 24px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .current-user-label {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .current-user-name {
+    font-family: var(--timer-font);
+    font-size: 42px;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+    transition: color 0.3s;
+  }
+
+  .rep-counter-label {
+    font-family: var(--timer-font);
+    font-size: clamp(48px, 14vw, 72px);
+    letter-spacing: 4px;
+    color: #ffffff;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    text-shadow: 0 0 30px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.15);
+    line-height: 1;
+  }
+
+  #timer-display {
+    font-family: var(--timer-font);
+    font-size: clamp(100px, 32vw, 160px);
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: 4px;
+    transition: color 0.3s;
+    text-align: center;
+    width: 100%;
+  }
+
+  #timer-display.warning { color: var(--accent2); }
+  #timer-display.danger { color: var(--red); }
+  #timer-display.done-flash { color: var(--green); }
+
+  .progress-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin: 24px 0 32px;
+    overflow: hidden;
+  }
+
+  #progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width 0.5s linear, background 0.3s;
+    width: 100%;
+  }
+
+  #go-btn {
+    width: 100%;
+    padding: 22px;
+    border-radius: 18px;
+    border: none;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--timer-font);
+    font-size: 36px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+  }
+
+  #go-btn:active { transform: scale(0.97); }
+  #go-btn.running { background: var(--muted); color: var(--bg); }
+  #go-btn.done-state { background: var(--green); }
+
+  #reset-btn {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--ui-font);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .workout-done-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    display: none;
+  }
+
+  .workout-done-overlay h2 {
+    font-family: var(--timer-font);
+    font-size: 64px;
+    color: var(--green);
+    letter-spacing: 4px;
+  }
+
+  .workout-done-overlay p {
+    font-size: 16px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .restart-btn {
+    margin-top: 20px;
+    padding: 16px 40px;
+    border-radius: 14px;
+    border: 2px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--timer-font);
+    font-size: 28px;
+    letter-spacing: 3px;
+    cursor: pointer;
+  }
+
+  /* User color palette */
+  .uc0 { color: #f0c040; } .uc1 { color: #40c8f0; } .uc2 { color: #e05a30; }
+  .uc3 { color: #a070e0; } .uc4 { color: #40c878; } .uc5 { color: #e050a0; }
+
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SETUP SCREEN ══════════════ -->
+<div id="setup-screen">
+  <div class="setup-header">
+    <h1>REP TIMER</h1>
+    <p>Round-Robin Workout</p>
+  </div>
+
+  <!-- Timer Duration -->
+  <div class="setup-section">
+    <div class="setup-label">Timer per rep (seconds)</div>
+    <div class="number-row">
+      <button class="num-btn" onclick="adjustTime(-1)">−</button>
+      <input class="num-display" id="time-display" type="number" value="20" min="1" max="300"
+        inputmode="numeric" pattern="[0-9]*"
+        onchange="syncTime(this)" oninput="syncTime(this)" />
+      <button class="num-btn" onclick="adjustTime(1)">+</button>
+    </div>
+  </div>
+
+  <!-- Total Reps -->
+  <div class="setup-section">
+    <div class="setup-label">Total reps in set (per user)</div>
+    <div class="number-row">
+      <button class="num-btn" onclick="adjustReps(-1)">−</button>
+      <input class="num-display" id="reps-display" type="number" value="10" min="1" max="99"
+        inputmode="numeric" pattern="[0-9]*"
+        onchange="syncReps(this)" oninput="syncReps(this)" />
+      <button class="num-btn" onclick="adjustReps(1)">+</button>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div class="setup-section">
+    <div class="setup-label">Users</div>
+    <div class="number-row" style="margin-bottom:16px;">
+      <button class="num-btn" onclick="adjustUsers(-1)">−</button>
+      <input class="num-display" id="users-display" type="number" value="1" min="1" max="6"
+        inputmode="numeric" pattern="[0-9]*"
+        onchange="syncUsers(this)" oninput="syncUsers(this)" />
+      <button class="num-btn" onclick="adjustUsers(1)">+</button>
+    </div>
+    <div class="user-inputs" id="user-inputs"></div>
+  </div>
+
+  <button class="start-btn" onclick="startWorkout()">START WORKOUT</button>
+</div>
+
+<!-- ══════════════ APP SCREEN ══════════════ -->
+<div id="app-screen">
+  <!-- Panel 1: Queue -->
+  <div id="panel-reps">
+    <div class="panel-title">Up Next</div>
+    <div id="queue-row"></div>
+    <div class="progress-dots" id="progress-dots"></div>
+  </div>
+
+  <!-- Panel 2: Timer -->
+  <div id="panel-timer">
+    <button id="reset-btn" onclick="goSetup()">RESET</button>
+
+    <div class="current-user-label" id="current-user-label">UP NEXT</div>
+    <div class="current-user-name" id="current-user-name">—</div>
+    <div class="rep-counter-label" id="rep-counter-label">REP 1</div>
+
+    <div id="timer-display">20</div>
+
+    <div class="progress-bar-wrap">
+      <div id="progress-bar"></div>
+    </div>
+
+    <button id="go-btn" onclick="handleGoBtn()">START</button>
+
+    <!-- Done overlay -->
+    <div class="workout-done-overlay" id="done-overlay">
+      <h2>DONE!</h2>
+      <p id="done-summary"></p>
+      <button class="restart-btn" onclick="goSetup()">NEW SET</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let cfg = { time: 20, reps: 10, users: 1, names: ['User 1'] };
+let state = { currentRep: 0, currentUserIdx: 0, remaining: 20, interval: null, running: false };
+
+const USER_COLORS = ['#f0c040','#40c8f0','#e05a30','#a070e0','#40c878','#e050a0'];
+
+// ── Audio ──
+let audioCtx = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playBeep() {
+  try {
+    ensureAudio();
+    // Three stacked oscillators for a loud, piercing beep
+    const layers = [
+      { type: 'square', freq: 880,  gain: 0.5 },
+      { type: 'square', freq: 1320, gain: 0.35 },
+      { type: 'sine',   freq: 660,  gain: 0.3  },
+    ];
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.setValueAtTime(1, audioCtx.currentTime);
+    masterGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+    masterGain.connect(audioCtx.destination);
+
+    layers.forEach(({ type, freq, gain }) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      g.gain.value = gain;
+      osc.connect(g);
+      g.connect(masterGain);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 1.2);
+    });
+  } catch(e) { console.warn('Audio error:', e); }
+}
+
+// ── Setup ──
+let setupTime = 20, setupReps = 10, setupUsers = 1;
+
+function adjustTime(d) {
+  setupTime = Math.max(1, Math.min(300, setupTime + d));
+  document.getElementById('time-display').value = setupTime;
+}
+function syncTime(el) {
+  const v = parseInt(el.value);
+  if (!isNaN(v) && el.value !== '') setupTime = Math.max(1, Math.min(300, v));
+}
+
+function adjustReps(d) {
+  setupReps = Math.max(1, Math.min(99, setupReps + d));
+  document.getElementById('reps-display').value = setupReps;
+}
+function syncReps(el) {
+  const v = parseInt(el.value);
+  if (!isNaN(v) && el.value !== '') setupReps = Math.max(1, Math.min(99, v));
+}
+
+function adjustUsers(d) {
+  setupUsers = Math.max(1, Math.min(6, setupUsers + d));
+  document.getElementById('users-display').value = setupUsers;
+  renderUserInputs();
+}
+function syncUsers(el) {
+  const v = parseInt(el.value);
+  if (!isNaN(v) && el.value !== '' && v >= 1 && v <= 6) {
+    setupUsers = v;
+    renderUserInputs();
+  }
+}
+
+function renderUserInputs() {
+  const container = document.getElementById('user-inputs');
+  const existing = container.querySelectorAll('.user-name-input');
+  const vals = Array.from(existing).map(i => i.value);
+  container.innerHTML = '';
+  for (let i = 0; i < setupUsers; i++) {
+    const color = USER_COLORS[i % USER_COLORS.length];
+    const row = document.createElement('div');
+    row.className = 'user-row';
+    row.innerHTML = `
+      <div class="user-dot" style="background:${color}"></div>
+      <input class="user-name-input" type="text" maxlength="20"
+        placeholder="User ${i + 1}"
+        value="${vals[i] || ''}" />
+    `;
+    container.appendChild(row);
+  }
+}
+
+function startWorkout() {
+  ensureAudio(); // unlock audio on user gesture
+  const inputs = document.querySelectorAll('.user-name-input');
+  const names = Array.from(inputs).map((inp, i) => inp.value.trim() || `User ${i + 1}`);
+  cfg = { time: setupTime, reps: setupReps, users: setupUsers, names };
+
+  // userRepCount[i] = how many reps user i has completed
+  const userRepCount = new Array(cfg.users).fill(0);
+  state = { currentTurn: 0, remaining: cfg.time, interval: null, running: false, userRepCount };
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  document.getElementById('done-overlay').style.display = 'none';
+
+  renderQueue();
+  updateTimerPanel();
+}
+
+// Total turns = cfg.users * cfg.reps
+function totalTurns() { return cfg.users * cfg.reps; }
+
+// For a given turn index, which user and which rep# (1-based) is it?
+function turnInfo(turn) {
+  const userIdx = turn % cfg.users;
+  const repNum = Math.floor(turn / cfg.users) + 1; // 1-based rep for this user
+  return { userIdx, repNum };
+}
+
+// ── Queue Panel (Panel 1) ──
+function renderQueue() {
+  const queueRow = document.getElementById('queue-row');
+  const dotsEl = document.getElementById('progress-dots');
+  queueRow.innerHTML = '';
+  dotsEl.innerHTML = '';
+
+  const total = totalTurns();
+  // Show current + up to 3 upcoming
+  const lookahead = Math.min(4, total - state.currentTurn);
+  for (let i = 0; i < lookahead; i++) {
+    const t = state.currentTurn + i;
+    if (t >= total) break;
+    const { userIdx, repNum } = turnInfo(t);
+    const color = USER_COLORS[userIdx % USER_COLORS.length];
+    const card = document.createElement('div');
+    card.className = 'queue-card ' + (i === 0 ? 'current' : 'upcoming');
+    card.innerHTML = `
+      <div class="queue-card-label">${i === 0 ? '▶ NOW' : 'NEXT ' + (i)}</div>
+      <div class="queue-card-name" style="color:${i === 0 ? color : ''}">${cfg.names[userIdx]}</div>
+      <div class="queue-card-rep" style="color:${i === 0 ? color : ''}">Rep ${repNum} of ${cfg.reps}</div>
+    `;
+    queueRow.appendChild(card);
+  }
+
+  // Progress dots — one per total turn
+  const maxDots = Math.min(total, 40); // cap at 40 dots
+  for (let t = 0; t < maxDots; t++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (t < state.currentTurn ? ' done' : t === state.currentTurn ? ' active' : '');
+    dotsEl.appendChild(dot);
+  }
+}
+
+// ── Timer Panel (Panel 2) ──
+function updateTimerPanel() {
+  const { userIdx, repNum } = turnInfo(state.currentTurn);
+  const color = USER_COLORS[userIdx % USER_COLORS.length];
+  const nameEl = document.getElementById('current-user-name');
+  nameEl.textContent = cfg.names[userIdx];
+  nameEl.style.color = color;
+
+  document.getElementById('rep-counter-label').textContent = `REP ${repNum} OF ${cfg.reps}`;
+
+  setTimerDisplay(state.remaining);
+  setProgress(state.remaining, cfg.time);
+
+  const goBtn = document.getElementById('go-btn');
+  const label = document.getElementById('current-user-label');
+  goBtn.textContent = state.running ? 'RUNNING…' : 'START';
+  goBtn.className = state.running ? 'running' : '';
+  label.textContent = state.running ? 'NOW EXERCISING' : 'UP NEXT';
+}
+
+function setTimerDisplay(secs) {
+  const el = document.getElementById('timer-display');
+  el.textContent = secs;
+  el.className = secs <= 3 ? 'danger' : secs <= Math.ceil(cfg.time * 0.4) ? 'warning' : '';
+}
+
+function setProgress(remaining, total) {
+  const pct = (remaining / total) * 100;
+  const bar = document.getElementById('progress-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = remaining <= 3 ? 'var(--red)' : remaining <= Math.ceil(total * 0.4) ? 'var(--accent2)' : 'var(--accent)';
+}
+
+// ── Timer Logic ──
+function handleGoBtn() {
+  if (state.running) return;
+  startCountdown();
+}
+
+function startCountdown() {
+  state.remaining = cfg.time;
+  state.running = true;
+  updateTimerPanel(); // updates label to NOW EXERCISING
+
+  state.interval = setInterval(() => {
+    state.remaining--;
+    setTimerDisplay(state.remaining);
+    setProgress(state.remaining, cfg.time);
+
+    if (state.remaining <= 0) {
+      clearInterval(state.interval);
+      state.running = false;
+      repComplete();
+    }
+  }, 1000);
+}
+
+function repComplete() {
+  // Loud beep
+  playBeep();
+
+  // Flash done
+  const el = document.getElementById('timer-display');
+  el.className = 'done-flash';
+  el.textContent = '✓';
+
+  // Vibrate if supported
+  if (navigator.vibrate) navigator.vibrate([150, 80, 150, 80, 150]);
+
+  setTimeout(() => {
+    state.currentTurn++;
+    if (state.currentTurn >= totalTurns()) {
+      showWorkoutDone();
+    } else {
+      state.remaining = cfg.time;
+      renderQueue();
+      updateTimerPanel();
+    }
+  }, 800);
+}
+
+function showWorkoutDone() {
+  document.getElementById('done-overlay').style.display = 'flex';
+  const totalTime = totalTurns() * cfg.time;
+  const mins = Math.floor(totalTime / 60);
+  const secs = totalTime % 60;
+  document.getElementById('done-summary').textContent =
+    `${cfg.reps} REPS · ${cfg.users} USER${cfg.users > 1 ? 'S' : ''} · ${mins > 0 ? mins + 'm ' : ''}${secs}s`;
+}
+
+function goSetup() {
+  clearInterval(state.interval);
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+  renderUserInputs();
+}
+
+// Init
+renderUserInputs();
+</script>
+</body>
+</html>
